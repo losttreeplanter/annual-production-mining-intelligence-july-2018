@@ -1,0 +1,191 @@
+---
+title: "Zinc"
+
+---
+
+Making a slopegraph looking at total zinc production. 
+
+ 
+
+```{r}
+
+library(tidyverse)
+rm(list = ls())
+
+rawoveriew <- read_csv("C:/Users/mmccrae/Desktop/properties-overview-for R June 2018.csv")
+View(properties_overview_for_R_June_2018)
+
+
+rawprod <- read_csv("C:/Users/mmccrae/Desktop/properties-annual MI for R Jun 2018.csv")
+View(properties_annual_MI_for_R_Jun_2018)
+
+
+
+```
+
+
+
+
+
+Merge two tables
+
+```{r}
+
+rawoverall <- full_join(rawoveriew,rawprod, by="PropertyID" )
+glimpse(rawoverall)
+
+```
+
+
+Top mine in zinc production in 2015
+
+```{r}
+
+topzincprod <- rawoverall %>% select(Property.y, Commodity, `2017`, ProductionUnit) %>% filter(Commodity=="Zinc") %>% group_by(Property.y) %>% tally(`2017`, sort=TRUE)
+topzincprod
+
+```
+
+
+
+```{r}
+
+zinc5to16 <- rawoverall %>% select(Property.y, Commodity,`2017`,`2016`, `2015`,`2014`,`2013`,`2012`,`2011`,`2010`,`2009`,`2008`,`2007`,`2006`,`2006`,ProductionUnit, Commodity, ProductionUnit, Country) %>% filter(Commodity=="Zinc")
+glimpse(zinc5to16)
+
+
+
+```
+
+
+
+```{r}
+zincgather <- zinc5to16 %>% gather("year", "production", 3:14)
+zincgather
+```
+
+
+
+What is total zinc output annually? 
+
+```{r}
+
+totalzincyear <- zincgather %>% group_by(year) %>% tally(production)
+totalzincyear
+
+
+```
+
+
+
+
+
+```{r}
+
+zincgather %>% filter(production>300) %>% 
+  ggplot(aes(x=year, y=production, group=Property.y, color=Property.y))+
+  geom_point()+
+  geom_line()
+
+
+```
+
+
+What are the top producing countries? Let's add 2017, 2016, 2015
+
+
+
+```{r}
+
+topcountryzinc <- zincgather %>% filter(year%in%c("2017", "2016", "2015")) %>% group_by(Country) %>% tally(production, sort=TRUE)
+topcountryzinc
+```
+
+
+
+
+
+Let's slopegraph 2015 to 2017 using countries. 
+
+```{r}
+
+slopecountrieszinc <- zincgather %>% filter(year%in%c(2015, 2016, 2017)) %>% filter(Country%in%c("Mexico","Australia","India","Peru", "United States")) %>% group_by(Country, year) %>% tally(production)
+
+slopecountrieszinc$n <- round(slopecountrieszinc$n)
+
+
+slopecountrieszinc
+```
+
+
+Let's chart
+
+
+```{r}
+
+library(CGPfunctions)
+
+
+
+sg <- newggslopegraph(dataframe = slopecountrieszinc,
+                Times = year,
+                Measurement = n,
+                Grouping = Country, 
+                Title = "Zinc Production By Country",
+                SubTitle = "In Kilotonnes",
+                Caption = NULL,
+                DataTextSize=3.5,
+                LineThickness =2,
+                LineColor=c("#7db5ef","#b1d059","#f6c040","#f08f39","#cf85db"))
+
+sg
+
+#ggsave("zincslope16.pdf", width=8,height=10)
+
+#ggsave("zincslope19.pdf")
+
+
+#?newggslopegraph
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+
+newggslopegraph(newcancer, Year, Survival, Type)
+
+
+```
+
+
